@@ -14,6 +14,10 @@ export default {
   resolve: {
     extensions: ['.ts', '.js'],
   },
+  externals: {
+    'utf-8-validate': 'commonjs utf-8-validate',
+    bufferutil: 'commonjs bufferutil',
+  },
   module: {
     rules: [
       {
@@ -24,4 +28,5 @@ export default {
     ],
   },
   devtool: 'source-map',
+  mode: 'none',
 };
