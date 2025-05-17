@@ -1,5 +1,7 @@
 import { WebSocketServer } from 'ws';
-import { regHandler } from './handlers';
+import { regHandler, createRoomHandler, updateRoomsHandler } from './handlers';
+import { getClient, removeClient } from './connections';
+import { database } from './db';
 
 export const setupWebSocketServer = (port: number) => {
   const wsServer = new WebSocketServer({ port: port });
@@ -11,7 +13,21 @@ export const setupWebSocketServer = (port: number) => {
 
       switch (payload.type) {
         case 'reg':
-          regHandler(ws, payload.data);
+          regHandler(ws, payload);
+          updateRoomsHandler(ws);
+          break;
+        case 'create_room':
+          createRoomHandler(ws);
+          updateRoomsHandler(ws);
+          break;
+      }
+    });
+
+    ws.on('close', () => {
+      const userId = getClient(ws);
+      if (userId) {
+        database.removeUser(userId);
+        removeClient(ws);
       }
     });
   });
