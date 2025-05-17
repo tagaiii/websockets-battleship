@@ -1,16 +1,19 @@
 import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { Database } from './db';
+import { RequestPayload, User } from './types';
 
 const database = new Database();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const regHandler = (ws: WebSocket, payload: any) => {
+export const regHandler = (
+  ws: WebSocket,
+  payload: RequestPayload<Omit<User, 'id'>>
+) => {
   const id = randomUUID();
   const newUser = {
     id: id,
-    name: payload.name,
-    password: payload.password,
+    name: payload.data.name,
+    password: payload.data.password,
   };
   const success = database.addUser(newUser);
   if (success) {
