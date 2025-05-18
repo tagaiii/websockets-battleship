@@ -71,7 +71,7 @@ export const updateRoomsHandler = () => {
     id: 0,
   });
   allClient.keys().forEach((ws) => ws.send(response));
-  logger('SERVER', 'update_room', 'Rooms list is updated');
+  logger('SERVER', 'update_room', `Rooms list is updated`);
 };
 
 export const addToRoomHandler = (
@@ -83,9 +83,11 @@ export const addToRoomHandler = (
   if (userId) {
     const userData = database.getUserById(userId);
     if (userData) {
+      logger('CLIENT', payload.type, `Player: ${userData.name}`);
       const roomUser = { name: userData.name, index: userData.id };
       if (roomId) {
         database.addUserToRoom(roomId, roomUser);
+        logger('SERVER', payload.type, `Player: ${userData.name} - success`);
       }
     }
   }
@@ -96,6 +98,11 @@ export const createGameHandler = (
 ) => {
   const roomId = JSON.parse(payload.data.toString()).indexRoom;
   if (roomId) {
+    logger(
+      'SERVER',
+      'create_game',
+      `Game session for room ID ${roomId} is created!`
+    );
     const room = database.getRoomById(roomId);
     if (room) {
       const allClients = getAllClients();
@@ -114,6 +121,12 @@ export const createGameHandler = (
                 }),
                 id: 0,
               })
+            );
+            const user = database.getUserById(userId);
+            logger(
+              'SERVER',
+              'create_game',
+              `Game started message sent to: ${user?.name}`
             );
           }
         }
