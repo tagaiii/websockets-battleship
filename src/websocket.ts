@@ -1,5 +1,11 @@
 import { WebSocketServer } from 'ws';
-import { regHandler, createRoomHandler, updateRoomsHandler } from './handlers';
+import {
+  regHandler,
+  createRoomHandler,
+  updateRoomsHandler,
+  addToRoomHandler,
+  createGameHandler,
+} from './handlers';
 import { getClient, removeClient } from './connections';
 import { database } from './db';
 import { colors } from './utils';
@@ -21,6 +27,11 @@ export const setupWebSocketServer = (port: number) => {
           break;
         case 'create_room':
           createRoomHandler(ws);
+          updateRoomsHandler();
+          break;
+        case 'add_user_to_room':
+          addToRoomHandler(ws, payload);
+          createGameHandler(payload);
           updateRoomsHandler();
           break;
       }

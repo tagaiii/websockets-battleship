@@ -21,3 +21,8 @@ export interface RoomUser {
   name: string;
   index: string;
 }
+
+export interface GameSession {
+  idGame: string;
+  idPlayer: string;
+}

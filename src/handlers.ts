@@ -1,7 +1,7 @@
 import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { database } from './db';
-import { RequestPayload, User } from './types';
+import { RequestPayload, Room, User } from './types';
 import { addClient, getClient, getAllClients } from './connections';
 import { logger } from './logger';
 
@@ -72,4 +72,48 @@ export const updateRoomsHandler = () => {
   });
   allClient.keys().forEach((ws) => ws.send(response));
   logger('SERVER', 'update_room', 'Rooms list is updated');
+};
+
+export const addToRoomHandler = (
+  ws: WebSocket,
+  payload: RequestPayload<Required<Pick<Room, 'indexRoom'>>>
+) => {
+  const roomId = JSON.parse(payload.data.toString()).indexRoom;
+  const userId = getClient(ws);
+  if (userId) {
+    const userData = database.getUserById(userId);
+    if (userData) {
+      const roomUser = { name: userData.name, index: userData.id };
+      if (roomId) {
+        database.addUserToRoom(roomId, roomUser);
+      }
+    }
+  }
+};
+
+export const createGameHandler = (
+  payload: RequestPayload<Required<Pick<Room, 'indexRoom'>>>
+) => {
+  const roomId = JSON.parse(payload.data.toString()).indexRoom;
+  if (roomId) {
+    const room = database.getRoomById(roomId);
+    if (room) {
+      const allClients = getAllClients();
+      allClients.entries().forEach(([ws, userId]) => {
+        if (room.roomUsers.find((user) => user.index === userId)) {
+          const idGame = randomUUID();
+          ws.send(
+            JSON.stringify({
+              type: 'create_game',
+              data: JSON.stringify({
+                idGame,
+                idPlayer: userId,
+              }),
+              id: 0,
+            })
+          );
+        }
+      });
+    }
+  }
 };
