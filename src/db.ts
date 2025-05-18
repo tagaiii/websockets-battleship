@@ -9,6 +9,7 @@ class Database {
     this.users.push(newUser);
     return true;
   }
+
   getUserById(userId: string) {
     return this.users.find((user) => user.id === userId);
   }

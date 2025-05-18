@@ -13,3 +13,7 @@ export const getClient = (ws: WebSocket) => {
 export const removeClient = (ws: WebSocket) => {
   clients.delete(ws);
 };
+
+export const getAllClients = () => {
+  return clients;
+};

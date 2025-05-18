@@ -14,11 +14,11 @@ export const setupWebSocketServer = (port: number) => {
       switch (payload.type) {
         case 'reg':
           regHandler(ws, payload);
-          updateRoomsHandler(ws);
+          updateRoomsHandler();
           break;
         case 'create_room':
           createRoomHandler(ws);
-          updateRoomsHandler(ws);
+          updateRoomsHandler();
           break;
       }
     });
@@ -26,8 +26,11 @@ export const setupWebSocketServer = (port: number) => {
     ws.on('close', () => {
       const userId = getClient(ws);
       if (userId) {
+        const user = database.getUserById(userId);
         database.removeUser(userId);
         removeClient(ws);
+        updateRoomsHandler();
+        console.log(`User ${user?.name} disconnected!`);
       }
     });
   });

@@ -2,7 +2,7 @@ import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { database } from './db';
 import { RequestPayload, User } from './types';
-import { addClient, getClient } from './connections';
+import { addClient, getClient, getAllClients } from './connections';
 
 export const regHandler = (
   ws: WebSocket,
@@ -20,19 +20,19 @@ export const regHandler = (
   const success = database.addUser(newUser);
   if (success) {
     addClient(ws, id);
-    const response = JSON.stringify({
-      type: 'reg',
-      data: JSON.stringify({
-        name: newUser.name,
-        index: newUser.id,
-        error: !success,
-        errorText: success ? '' : 'User with this name already exists!',
-      }),
-      id: 0,
-    });
-
-    ws.send(response);
   }
+  const response = JSON.stringify({
+    type: 'reg',
+    data: JSON.stringify({
+      name: success ? newUser.name : '',
+      index: success ? newUser.id : '',
+      error: !success,
+      errorText: success ? '' : 'User with this name already exists!',
+    }),
+    id: 0,
+  });
+
+  ws.send(response);
 };
 
 export const createRoomHandler = (ws: WebSocket) => {
@@ -51,15 +51,16 @@ export const createRoomHandler = (ws: WebSocket) => {
   }
 };
 
-export const updateRoomsHandler = (ws: WebSocket) => {
+export const updateRoomsHandler = () => {
+  const allClient = getAllClients();
   const rooms = database
     .getRooms()
     .filter((room) => room.roomUsers.length === 1);
+
   const response = JSON.stringify({
     type: 'update_room',
     data: JSON.stringify(rooms),
     id: 0,
   });
-
-  ws.send(response);
+  allClient.keys().forEach((ws) => ws.send(response));
 };
