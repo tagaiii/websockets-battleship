@@ -2,11 +2,14 @@ import { WebSocketServer } from 'ws';
 import { regHandler, createRoomHandler, updateRoomsHandler } from './handlers';
 import { getClient, removeClient } from './connections';
 import { database } from './db';
+import { colors } from './utils';
 
 export const setupWebSocketServer = (port: number) => {
   const wsServer = new WebSocketServer({ port: port });
   wsServer.on('connection', (ws) => {
-    console.log('WebSocket connection is established');
+    console.log(colors.red('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'));
+    console.log('New WebSocket connection is established');
+    console.log(colors.red('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'));
 
     ws.on('message', (data) => {
       const payload = JSON.parse(data.toString());
@@ -30,7 +33,7 @@ export const setupWebSocketServer = (port: number) => {
         database.removeUser(userId);
         removeClient(ws);
         updateRoomsHandler();
-        console.log(`User ${user?.name} disconnected!`);
+        console.log(colors.red(`User ${user?.name} disconnected!`));
       }
     });
   });

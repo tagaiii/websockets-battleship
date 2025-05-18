@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { database } from './db';
 import { RequestPayload, User } from './types';
 import { addClient, getClient, getAllClients } from './connections';
+import { logger } from './logger';
 
 export const regHandler = (
   ws: WebSocket,
@@ -10,6 +11,7 @@ export const regHandler = (
 ) => {
   const id = randomUUID();
   const userData = JSON.parse(payload.data.toString());
+  logger('CLIENT', payload.type, `Player: ${userData.name}`);
 
   const newUser = {
     id: id,
@@ -31,7 +33,11 @@ export const regHandler = (
     }),
     id: 0,
   });
-
+  logger(
+    'SERVER',
+    'reg',
+    `Player: ${userData.name}` + (success ? ' - success' : ' - failed')
+  );
   ws.send(response);
 };
 
@@ -41,12 +47,14 @@ export const createRoomHandler = (ws: WebSocket) => {
   if (userId) {
     const user = database.getUserById(userId);
     if (user) {
+      logger('CLIENT', 'create_room', `Player: ${user.name}`);
       const newRoom = {
         roomId: roomId,
         indexRoom: roomId,
         roomUsers: [{ name: user.name, index: user.id }],
       };
       database.createRoom(newRoom);
+      logger('SERVER', 'create_room', `Player: ${user.name} - success`);
     }
   }
 };
@@ -63,4 +71,5 @@ export const updateRoomsHandler = () => {
     id: 0,
   });
   allClient.keys().forEach((ws) => ws.send(response));
+  logger('SERVER', 'update_room', 'Rooms list is updated');
 };
