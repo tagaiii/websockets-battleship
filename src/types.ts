@@ -24,5 +24,20 @@ export interface RoomUser {
 
 export interface GameSession {
   idGame: string;
-  idPlayer: string;
+  players: GameSessionUser[];
+}
+
+export interface GameSessionUser {
+  id: string;
+  ships?: Ship[];
+}
+
+export interface Ship {
+  position: {
+    x: number;
+    y: number;
+  };
+  direction: boolean;
+  length: number;
+  type: 'small' | 'medium' | 'large' | 'huge';
 }

@@ -1,4 +1,4 @@
-import { User, Room, RoomUser, GameSession } from './types';
+import { User, Room, RoomUser, GameSession, GameSessionUser } from './types';
 
 class Database {
   private users: User[] = [];
@@ -17,9 +17,21 @@ class Database {
 
   removeUser(userId: string) {
     this.users = this.users.filter((user) => user.id !== userId);
-    this.rooms = this.rooms.filter(
-      (room) => !room.roomUsers.some((user) => user.index === userId)
+    const room = this.rooms.find((r) =>
+      r.roomUsers.find((user) => user.index === userId)
     );
+    if (room) {
+      room.roomUsers = room.roomUsers.filter((user) => user.index !== userId);
+    }
+
+    const gameSession = this.gameSessions.find((gs) =>
+      gs.players.find((player) => player.id === userId)
+    );
+    if (gameSession) {
+      gameSession.players = gameSession.players.filter(
+        (player) => player.id !== userId
+      );
+    }
   }
 
   createRoom(newRoom: Room) {
@@ -37,15 +49,25 @@ class Database {
   addUserToRoom(roomId: string, user: RoomUser) {
     const room = this.rooms.find((r) => r.roomId === roomId);
     if (room) {
-      room.roomUsers.push(user);
-      return true;
+      if (!room.roomUsers.find((u) => u.index === user.index)) {
+        room.roomUsers.push(user);
+        return true;
+      }
     }
     return false;
   }
 
-  createGameSession(idGame: string, idPlayer: string) {
-    const newGame = { idGame, idPlayer };
+  createGameSession(idGame: string, players: GameSessionUser[]) {
+    const newGame = { idGame, players };
     this.gameSessions.push(newGame);
+  }
+
+  addUserToGameSession(idGame: string, userId: string) {
+    const gameSession = this.gameSessions.find((gs) => gs.idGame === idGame);
+    const player = { id: userId, ships: [] };
+    if (gameSession) {
+      gameSession.players.push(player);
+    }
   }
 }
 

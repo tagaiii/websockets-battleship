@@ -99,19 +99,23 @@ export const createGameHandler = (
     const room = database.getRoomById(roomId);
     if (room) {
       const allClients = getAllClients();
+      const idGame = randomUUID();
+      database.createGameSession(idGame, []);
       allClients.entries().forEach(([ws, userId]) => {
         if (room.roomUsers.find((user) => user.index === userId)) {
-          const idGame = randomUUID();
-          ws.send(
-            JSON.stringify({
-              type: 'create_game',
-              data: JSON.stringify({
-                idGame,
-                idPlayer: userId,
-              }),
-              id: 0,
-            })
-          );
+          database.addUserToGameSession(idGame, userId);
+          if (room.roomUsers.length === 2) {
+            ws.send(
+              JSON.stringify({
+                type: 'create_game',
+                data: JSON.stringify({
+                  idGame,
+                  idPlayer: userId,
+                }),
+                id: 0,
+              })
+            );
+          }
         }
       });
     }
