@@ -1,4 +1,11 @@
-import { User, Room, RoomUser, GameSession, GameSessionUser } from './types';
+import {
+  User,
+  Room,
+  RoomUser,
+  GameSession,
+  GameSessionUser,
+  Ship,
+} from './types';
 
 class Database {
   private users: User[] = [];
@@ -8,7 +15,6 @@ class Database {
   addUser(newUser: User) {
     if (this.users.find((user) => user.name === newUser.name)) return false;
     this.users.push(newUser);
-    console.log(this.users);
     return true;
   }
 
@@ -67,12 +73,24 @@ class Database {
     this.gameSessions.push(newGame);
   }
 
+  getGameSessionById(idGame: string) {
+    return this.gameSessions.find((gs) => gs.idGame === idGame);
+  }
+
   addUserToGameSession(idGame: string, userId: string) {
     const gameSession = this.gameSessions.find((gs) => gs.idGame === idGame);
     const player = { id: userId, ships: [] };
     if (gameSession) {
       gameSession.players.push(player);
     }
+  }
+
+  addUserShips(idGame: string, userId: string, ships: Ship[]) {
+    const gameSession = this.gameSessions.find((gs) => gs.idGame === idGame);
+    const user = gameSession?.players.find((player) => player.id === userId);
+    user?.ships?.push(...ships);
+    console.log('db', user);
+    console.log('gs', gameSession);
   }
 }
 

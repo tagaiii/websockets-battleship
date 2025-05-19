@@ -1,8 +1,19 @@
 import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { database } from './db';
-import { RequestPayload, Room, User, WinnerData } from './types';
-import { addClient, getClient, getAllClients } from './connections';
+import {
+  PlayerShipsData,
+  RequestPayload,
+  Room,
+  User,
+  WinnerData,
+} from './types';
+import {
+  addClient,
+  getClient,
+  getAllClients,
+  getClientById,
+} from './connections';
 import { logger } from './logger';
 
 export const regHandler = (
@@ -118,39 +129,73 @@ export const createGameHandler = (
 ) => {
   const roomId = JSON.parse(payload.data.toString()).indexRoom;
   if (roomId) {
-    logger(
-      'SERVER',
-      'create_game',
-      `Game session for room ID ${roomId} is created!`
-    );
     const room = database.getRoomById(roomId);
     if (room) {
-      const allClients = getAllClients();
       const idGame = randomUUID();
       database.createGameSession(idGame, []);
-      allClients.entries().forEach(([ws, userId]) => {
-        if (room.roomUsers.find((user) => user.index === userId)) {
-          database.addUserToGameSession(idGame, userId);
-          if (room.roomUsers.length === 2) {
-            ws.send(
-              JSON.stringify({
-                type: 'create_game',
-                data: JSON.stringify({
-                  idGame,
-                  idPlayer: userId,
-                }),
-                id: 0,
-              })
-            );
-            const user = database.getUserById(userId);
-            logger(
-              'SERVER',
-              'create_game',
-              `Game started message sent to: ${user?.name}`
-            );
-          }
-        }
-      });
+      logger(
+        'SERVER',
+        'create_game',
+        `Game session for room ID ${roomId} is created!`
+      );
+
+      if (room.roomUsers.length === 2) {
+        room.roomUsers.forEach((user) => {
+          database.addUserToGameSession(idGame, user.index);
+          const ws = getClientById(user.index);
+          ws?.send(
+            JSON.stringify({
+              type: 'create_game',
+              data: JSON.stringify({
+                idGame,
+                idPlayer: user.index,
+              }),
+              id: 0,
+            })
+          );
+          logger(
+            'SERVER',
+            'create_game',
+            `Game created message sent to: ${user?.name}`
+          );
+        });
+      }
     }
+  }
+};
+
+export const startGameHandler = (payload: RequestPayload<PlayerShipsData>) => {
+  const data: PlayerShipsData = JSON.parse(payload.data.toString());
+  const user = database.getUserById(data.indexPlayer);
+  logger('CLIENT', payload.type, `Ships added by: ${user?.name}`);
+
+  const gameSession = database.getGameSessionById(data.gameId);
+  database.addUserShips(data.gameId, data.indexPlayer, data.ships);
+
+  if (
+    gameSession?.players.every((player) => {
+      if (player.ships) {
+        return player.ships.length > 0;
+      }
+    })
+  ) {
+    gameSession.players.forEach((player) => {
+      const ws = getClientById(player.id);
+      const response = {
+        type: 'start_game',
+        data: JSON.stringify({
+          ships: player.ships,
+          currentPlayerIndex: player.id,
+        }),
+        id: 0,
+      };
+
+      ws?.send(JSON.stringify(response));
+      logger(
+        'SERVER',
+        'start_game',
+        `Game started message sent to: ${user?.name}`
+      );
+    });
   }
 };

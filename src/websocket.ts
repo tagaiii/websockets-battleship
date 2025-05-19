@@ -6,6 +6,7 @@ import {
   addToRoomHandler,
   createGameHandler,
   updateWinnersHandler,
+  startGameHandler,
 } from './handlers';
 import { getClient, removeClient } from './connections';
 import { database } from './db';
@@ -35,6 +36,9 @@ export const setupWebSocketServer = (port: number) => {
           addToRoomHandler(ws, payload);
           createGameHandler(payload);
           updateRoomsHandler();
+          break;
+        case 'add_ships':
+          startGameHandler(payload);
           break;
       }
     });

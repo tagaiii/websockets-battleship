@@ -46,3 +46,9 @@ export interface Ship {
   length: number;
   type: 'small' | 'medium' | 'large' | 'huge';
 }
+
+export interface PlayerShipsData {
+  gameId: string;
+  ships: Ship[];
+  indexPlayer: string;
+}

@@ -17,3 +17,11 @@ export const removeClient = (ws: WebSocket) => {
 export const getAllClients = () => {
   return clients;
 };
+
+export const getClientById = (id: string) => {
+  for (const [ws, clientId] of clients.entries()) {
+    if (clientId === id) {
+      return ws;
+    }
+  }
+};
