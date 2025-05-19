@@ -2,7 +2,12 @@ export interface User {
   id: string;
   name: string;
   password: string;
-  wins?: string[];
+  wins: number;
+}
+
+export interface WinnerData {
+  name: string;
+  wins: number;
 }
 
 export interface RequestPayload<T> {

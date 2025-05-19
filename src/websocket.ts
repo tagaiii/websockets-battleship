@@ -5,6 +5,7 @@ import {
   updateRoomsHandler,
   addToRoomHandler,
   createGameHandler,
+  updateWinnersHandler,
 } from './handlers';
 import { getClient, removeClient } from './connections';
 import { database } from './db';
@@ -24,6 +25,7 @@ export const setupWebSocketServer = (port: number) => {
         case 'reg':
           regHandler(ws, payload);
           updateRoomsHandler();
+          updateWinnersHandler();
           break;
         case 'create_room':
           createRoomHandler(ws);

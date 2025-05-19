@@ -1,7 +1,7 @@
 import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { database } from './db';
-import { RequestPayload, Room, User } from './types';
+import { RequestPayload, Room, User, WinnerData } from './types';
 import { addClient, getClient, getAllClients } from './connections';
 import { logger } from './logger';
 
@@ -17,6 +17,7 @@ export const regHandler = (
     id: id,
     name: userData.name,
     password: userData.password,
+    wins: 0,
   };
 
   const success = database.addUser(newUser);
@@ -39,6 +40,25 @@ export const regHandler = (
     `Player: ${userData.name}` + (success ? ' - success' : ' - failed')
   );
   ws.send(response);
+};
+
+export const updateWinnersHandler = () => {
+  const users = database.getUsers();
+  const allClients = getAllClients();
+  const winnersData: WinnerData[] = [];
+  if (users) {
+    users.forEach((user) => {
+      const winner = { name: user.name, wins: user.wins };
+      winnersData.push(winner);
+    });
+  }
+  const response = {
+    type: 'update_winners',
+    data: JSON.stringify(winnersData),
+    id: 0,
+  };
+  allClients.keys().forEach((ws) => ws.send(JSON.stringify(response)));
+  logger('SERVER', 'update_winners', 'Winners table is updated');
 };
 
 export const createRoomHandler = (ws: WebSocket) => {

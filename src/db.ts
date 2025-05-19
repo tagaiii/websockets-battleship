@@ -8,7 +8,12 @@ class Database {
   addUser(newUser: User) {
     if (this.users.find((user) => user.name === newUser.name)) return false;
     this.users.push(newUser);
+    console.log(this.users);
     return true;
+  }
+
+  getUsers() {
+    return this.users;
   }
 
   getUserById(userId: string) {
