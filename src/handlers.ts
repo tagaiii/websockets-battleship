@@ -2,6 +2,7 @@ import type { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { database } from './db';
 import {
+  PlayerAttackData,
   PlayerShipsData,
   RequestPayload,
   Room,
@@ -191,11 +192,51 @@ export const startGameHandler = (payload: RequestPayload<PlayerShipsData>) => {
       };
 
       ws?.send(JSON.stringify(response));
+
+      const currUser = database.getUserById(player.id);
       logger(
         'SERVER',
         'start_game',
-        `Game started message sent to: ${user?.name}`
+        `Game started message sent to: ${currUser?.name}`
       );
     });
+    playerTurnHandler(payload);
+  }
+};
+
+export const playerTurnHandler = (
+  payload: RequestPayload<PlayerShipsData | PlayerAttackData>
+) => {
+  const data: PlayerShipsData | PlayerAttackData = JSON.parse(
+    payload.data.toString()
+  );
+
+  const gameSession = database.getGameSessionById(data.gameId);
+  if (gameSession) {
+    if (!gameSession?.currentPlayerId) {
+      const index = Math.floor(Math.random() * 2) + 1;
+      gameSession.currentPlayerId = gameSession.players[index]?.id;
+    } else {
+      gameSession.currentPlayerId = gameSession.players.find(
+        (player) => player.id !== gameSession.currentPlayerId
+      )?.id;
+    }
+
+    gameSession.players.forEach((player) => {
+      const ws = getClientById(player.id);
+
+      const response = {
+        type: 'turn',
+        data: JSON.stringify({
+          currentPlayer: gameSession.currentPlayerId,
+        }),
+        id: 0,
+      };
+      ws?.send(JSON.stringify(response));
+    });
+    if (gameSession.currentPlayerId) {
+      const user = database.getUserById(gameSession.currentPlayerId);
+      logger('SERVER', 'turn', `Current player is ${user?.name}`);
+    }
   }
 };

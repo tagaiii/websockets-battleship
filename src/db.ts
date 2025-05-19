@@ -89,8 +89,6 @@ class Database {
     const gameSession = this.gameSessions.find((gs) => gs.idGame === idGame);
     const user = gameSession?.players.find((player) => player.id === userId);
     user?.ships?.push(...ships);
-    console.log('db', user);
-    console.log('gs', gameSession);
   }
 }
 

@@ -30,6 +30,7 @@ export interface RoomUser {
 export interface GameSession {
   idGame: string;
   players: GameSessionUser[];
+  currentPlayerId?: string;
 }
 
 export interface GameSessionUser {
@@ -50,5 +51,12 @@ export interface Ship {
 export interface PlayerShipsData {
   gameId: string;
   ships: Ship[];
+  indexPlayer: string;
+}
+
+export interface PlayerAttackData {
+  gameId: string;
+  x: number;
+  y: number;
   indexPlayer: string;
 }
